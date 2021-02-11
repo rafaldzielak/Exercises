@@ -1,7 +1,6 @@
 import http from "http";
+import { requestHandler } from "./routes.js";
 
-const server = http.createServer((req, res) => {
-  console.log(req);
-});
+const server = http.createServer(requestHandler);
 
 server.listen(5000);
