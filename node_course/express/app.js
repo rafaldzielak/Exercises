@@ -7,8 +7,8 @@ import shopRoutes from "./routes/shop.js";
 
 const app = express();
 
-app.engine("handlebars", expressHbs({ layoutsDir: "views/layouts", defaultLayout: "main-layout" })); //default is views/layouts
-app.set("view engine", "handlebars");
+app.set("view engine", "ejs");
+// app.set("view engine", "handlebars");
 // app.set("view engine", "pug"); //pug comes with auto registering for express (that's why it works)
 app.set("views", "views"); //it's default, but show the folder
 
