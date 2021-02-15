@@ -1,9 +1,9 @@
 import express from "express";
 import bodyParser from "body-parser";
 import path from "path";
-import expressHbs from "express-handlebars";
 import adminRoutes from "./routes/admin.js";
 import shopRoutes from "./routes/shop.js";
+import { get404 } from "./controllers/errorController.js";
 
 const app = express();
 
@@ -19,9 +19,6 @@ app.use(express.static(path.resolve("public")));
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
-app.use((req, res) => {
-  // res.status(404).sendFile(path.resolve("views", "404.html"));
-  res.render("404");
-});
+app.use(get404);
 
 app.listen(5000, () => console.log("App started"));
