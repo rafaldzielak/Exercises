@@ -1,4 +1,4 @@
-const products = [];
+import ProductModel from "../models/productModel.js";
 
 const getAddProduct = (req, res, next) => {
   console.log("AAAA");
@@ -6,21 +6,24 @@ const getAddProduct = (req, res, next) => {
 };
 
 const postAddProduct = (req, res, next) => {
-  products.push({ title: req.body.title, productCSS: true, formsCSS: true, activeAddProduct: true });
+  const product = new ProductModel(req.body.title);
+  product.save();
   res.redirect("/");
 };
 
 const getProducts = (req, res, next) => {
-  console.log("get products");
-  // res.sendFile(path.resolve("views", "shop.html"));
-  res.render("shop", {
-    prods: products,
-    path: "/",
-    hasProducts: products.length > 0,
-    activeShop: true,
-    productCSS: true,
-    // layout: false // if that is selected - the layout will not be used
+  ProductModel.fetchAll((products) => {
+    // console.log(products);
+    res.render("shop", {
+      prods: products,
+      path: "/",
+      hasProducts: products.length > 0,
+      activeShop: true,
+      productCSS: true,
+      // layout: false // if that is selected - the layout will not be used
+    });
   });
+  // res.sendFile(path.resolve("views", "shop.html"));
 };
 
 export { getProducts, getAddProduct, postAddProduct };
