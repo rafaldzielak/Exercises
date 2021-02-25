@@ -33,6 +33,15 @@ export const getCart = (req, res, next) => {
     });
   });
 };
+export const getOrders = (req, res, next) => {
+  ProductModel.fetchAll((products) => {
+    res.render("shop/orders", {
+      prods: products,
+      path: "/orders",
+      pageTitle: "Your Orders",
+    });
+  });
+};
 
 export const getCheckout = (req, res, next) => {
   ProductModel.fetchAll((products) => {

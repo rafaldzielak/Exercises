@@ -6,7 +6,8 @@ const getAddProduct = (req, res, next) => {
 };
 
 const postAddProduct = (req, res, next) => {
-  const product = new ProductModel(req.body.title);
+  const { title, imageUrl, description, price } = req.body;
+  const product = new ProductModel(title, imageUrl, description, price);
   product.save();
   res.redirect("/");
 };
