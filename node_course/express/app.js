@@ -1,24 +1,24 @@
-import express from "express";
-import bodyParser from "body-parser";
-import path from "path";
-import adminRoutes from "./routes/admin.js";
-import shopRoutes from "./routes/shop.js";
-import { get404 } from "./controllers/errorController.js";
+const path = require('path');
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const errorController = require('./controllers/error');
 
 const app = express();
 
-app.set("view engine", "ejs");
-// app.set("view engine", "handlebars");
-// app.set("view engine", "pug"); //pug comes with auto registering for express (that's why it works)
-app.set("views", "views"); //it's default, but show the folder
+app.set('view engine', 'ejs');
+app.set('views', 'views');
+
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
 
 app.use(bodyParser.urlencoded({ extended: false }));
-console.log(path.resolve("public", "css", "main.css"));
-app.use(express.static(path.resolve("public")));
-// app.use(express.static(path.resolve("publics"))); //it's possible, it will look in every dir for the file
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use("/admin", adminRoutes);
+app.use('/admin', adminRoutes);
 app.use(shopRoutes);
-app.use(get404);
 
-app.listen(5000, () => console.log("App started"));
+app.use(errorController.get404);
+
+app.listen(3000);
