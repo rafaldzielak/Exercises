@@ -13,13 +13,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-
-  const product = Product.create({ title, imageUrl, price, description })
+  console.log(req.user);
+  req.user
+    .createProduct({ title, imageUrl, price, description })
     .then((result) => {
       console.log("Created Product");
       res.redirect("/admin/products");
     })
-    .catch((error) => console.log(error));
+    .catch((error) => console.log(error)); //sequelize created that method based on association in app.js (Product.belongsTo(...))
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -28,6 +29,7 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
+  // req.user.getProducts({ where: { id: prodId } }); //look only for products created by user
   Product.findByPk(prodId)
     .then((product) => {
       if (!product) return res.redirect("/");
@@ -65,6 +67,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
+  // req.user.getProducts() //find products created only by this user
   Product.findAll()
     .then((products) => {
       res.render("admin/products", {
