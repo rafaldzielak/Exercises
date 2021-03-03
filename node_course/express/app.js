@@ -14,6 +14,8 @@ app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -35,14 +37,20 @@ app.use(errorController.get404);
 
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); //User created product
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User);
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
 
 sequelize
   .sync() //has a look into defined models and creates tables / relationships
   .then((result) => User.findByPk(1))
   .then((user) => {
-    if (!user) User.create({ name: "Rafa", email: "rafa@gmail.com" });
-    return user;
-    return Promise.resolve(user); //this is the same as above, because .then creates promise automatically
+    if (!user) {
+      User.create({ name: "Rafa", email: "rafa@gmail.com" });
+      return user.createCart();
+    }
+    // return Promise.resolve(user); //this is the same as above, because .then creates promise automatically
   })
   .then((user) => {
     // console.log(user);
