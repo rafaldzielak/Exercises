@@ -1,7 +1,8 @@
 const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoConnect = require("./util/database").mongoConnect;
+// const mongoConnect = require("./util/database").mongoConnect;
+const mongoose = require("mongoose");
 
 const errorController = require("./controllers/error");
 
@@ -17,21 +18,22 @@ const User = require("./models/user");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use((req, res, next) => {
-  // makes user available everywhere
-  User.findById("604255c19dad251d7c347794")
-    .then((user) => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
-      next();
-    })
-    .catch((err) => console.log(err));
-});
+// app.use((req, res, next) => {
+//   // makes user available everywhere
+//   User.findById("604255c19dad251d7c347794")
+//     .then((user) => {
+//       req.user = new User(user.name, user.email, user.cart, user._id);
+//       next();
+//     })
+//     .catch((err) => console.log(err));
+// });
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  return app.listen(3000);
-});
+mongoose
+  .connect("mongodb+srv://rafa:asdasd@cluster0.0mi3y.mongodb.net/shop?retryWrites=true&w=majority")
+  .then((result) => app.listen(3000))
+  .catch((error) => console.log(error));
