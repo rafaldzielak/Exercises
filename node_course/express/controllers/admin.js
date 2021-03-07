@@ -14,7 +14,8 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product({ title, price, description, imageUrl });
+  const userId = req.user; // mongoose will automaticall take _id, but it could also be req.user._id !!!
+  const product = new Product({ title, price, description, imageUrl, userId });
   product
     .save()
     .then((result) => {
@@ -68,6 +69,8 @@ exports.postEditProduct = (req, res, next) => {
 exports.getProducts = (req, res, next) => {
   // req.user.getProducts() //find products created only by this user
   Product.find()
+    .select("title price description imageUrl -_id") //get title, price , ...,  but not _id
+    .populate("userId", "name") //get name from user, _id will be fetched
     .then((products) => {
       res.render("admin/products", {
         path: "/admin/products",
