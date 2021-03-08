@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Order = require("../models/order");
 // const Cart = require("../models/cart");
 
 exports.getProducts = (req, res, next) => {
@@ -8,6 +9,7 @@ exports.getProducts = (req, res, next) => {
         path: "/products",
         pageTitle: "Shop",
         prods: products,
+        isAuthenticated: req.isLoggedIn,
       });
     })
     .catch((error) => console.log(error));
@@ -21,6 +23,7 @@ exports.getProduct = (req, res, next) => {
         path: "/product",
         pageTitle: "product",
         product,
+        isAuthenticated: req.isLoggedIn,
       });
     })
     .catch((error) => console.log(error));
@@ -33,6 +36,7 @@ exports.getIndex = (req, res, next) => {
         path: "/",
         pageTitle: "Shop",
         prods: products,
+        isAuthenticated: req.isLoggedIn,
       });
     })
     .catch((error) => console.log(error));
@@ -76,15 +80,30 @@ exports.postCartDeleteProduct = (req, res, next) => {
 // };
 
 exports.postOrder = (req, res, next) => {
-  req.user.addOrder().then(() => res.redirect("/orders"));
+  req.user
+    .populate("cart.items.productId")
+    .execPopulate() //gives promise
+    .then((user) => {
+      const products = user.cart.items.map((item) => {
+        return { quantity: item.quantity, product: { ...item.productId._doc } };
+      });
+      const order = new Order({ products, user: { name: req.user.name, userId: req.user } });
+      order.save();
+    })
+    .then(() => req.user.clearCart())
+    .then(() => res.redirect("/orders"));
 };
 
 exports.getOrders = (req, res, next) => {
-  req.user
-    .getOrders()
+  Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       console.log(orders);
-      res.render("shop/orders", { path: "/orders", pageTitle: "Your Orders", orders });
+      res.render("shop/orders", {
+        path: "/orders",
+        pageTitle: "Your Orders",
+        orders,
+        isAuthenticated: req.isLoggedIn,
+      });
     })
     .catch((error) => console.log(error));
 };
