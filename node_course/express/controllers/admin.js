@@ -6,7 +6,7 @@ exports.getAddProduct = (req, res, next) => {
     pageTitle: "Add Product",
     path: "/admin/add-product",
     editing: false,
-    isAuthenticated: req.isLoggedIn,
+    isAuthenticated: req.session.user,
   });
 };
 
@@ -15,7 +15,9 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const userId = req.user; // mongoose will automaticall take _id, but it could also be req.user._id !!!
+  const userId = req.session.user; // mongoose will automaticall take _id, but it could also be req.session.user._id !!!
+  console.log("userId");
+  console.log(userId);
   const product = new Product({ title, price, description, imageUrl, userId });
   product
     .save()
@@ -32,7 +34,7 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  // req.user.getProducts({ where: { id: prodId } }); //look only for products created by user
+  // req.session.user.getProducts({ where: { id: prodId } }); //look only for products created by user
   Product.findById(prodId)
     .then((product) => {
       if (!product) return res.redirect("/");
@@ -41,7 +43,7 @@ exports.getEditProduct = (req, res, next) => {
         path: "/admin/edit-product",
         editing: editMode,
         product: product,
-        isAuthenticated: req.isLoggedIn,
+        isAuthenticated: req.session.user,
       });
     })
     .catch((error) => console.log(error));
@@ -69,7 +71,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  // req.user.getProducts() //find products created only by this user
+  // req.session.user.getProducts() //find products created only by this user
   Product.find()
     .select("title price description imageUrl -_id") //get title, price , ...,  but not _id
     .populate("userId", "name") //get name from user, _id will be fetched
@@ -78,7 +80,7 @@ exports.getProducts = (req, res, next) => {
         path: "/admin/products",
         pageTitle: "Shop",
         prods: products,
-        isAuthenticated: req.isLoggedIn,
+        isAuthenticated: req.session.user,
       });
     })
     .catch((error) => console.log(error));
