@@ -1,12 +1,10 @@
 const Product = require("../models/product");
-const mongodb = require("mongodb");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
     editing: false,
-    isAuthenticated: req.session.user,
   });
 };
 
@@ -15,17 +13,23 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const userId = req.session.user; // mongoose will automaticall take _id, but it could also be req.session.user._id !!!
-  console.log("userId");
-  console.log(userId);
-  const product = new Product({ title, price, description, imageUrl, userId });
+  const product = new Product({
+    title: title,
+    price: price,
+    description: description,
+    imageUrl: imageUrl,
+    userId: req.user,
+  });
   product
     .save()
     .then((result) => {
+      // console.log(result);
       console.log("Created Product");
       res.redirect("/admin/products");
     })
-    .catch((error) => console.log(error));
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -34,19 +38,19 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  // req.session.user.getProducts({ where: { id: prodId } }); //look only for products created by user
   Product.findById(prodId)
     .then((product) => {
-      if (!product) return res.redirect("/");
+      if (!product) {
+        return res.redirect("/");
+      }
       res.render("admin/edit-product", {
         pageTitle: "Edit Product",
         path: "/admin/edit-product",
         editing: editMode,
         product: product,
-        isAuthenticated: req.session.user,
       });
     })
-    .catch((error) => console.log(error));
+    .catch((err) => console.log(err));
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -56,39 +60,42 @@ exports.postEditProduct = (req, res, next) => {
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
 
-  const product = Product.findById(prodId)
+  Product.findById(prodId)
     .then((product) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
-      product.imageUrl = updatedImageUrl;
       product.description = updatedDesc;
-      product.save().then((result) => {
-        console.log("Product updated!");
-        res.redirect("/admin/products");
-      });
+      product.imageUrl = updatedImageUrl;
+      return product.save();
     })
-    .catch((error) => console.log(error));
+    .then((result) => {
+      console.log("UPDATED PRODUCT!");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
-  // req.session.user.getProducts() //find products created only by this user
   Product.find()
-    .select("title price description imageUrl -_id") //get title, price , ...,  but not _id
-    .populate("userId", "name") //get name from user, _id will be fetched
+    // .select('title price -_id')
+    // .populate('userId', 'name')
     .then((products) => {
+      console.log(products);
       res.render("admin/products", {
-        path: "/admin/products",
-        pageTitle: "Shop",
         prods: products,
-        isAuthenticated: req.session.user,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
       });
     })
-    .catch((error) => console.log(error));
+    .catch((err) => console.log(err));
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findByIdAndDelete(prodId)
-    .then(() => res.redirect("/admin/products"))
-    .catch((error) => console.log(error));
+  Product.findByIdAndRemove(prodId)
+    .then(() => {
+      console.log("DESTROYED PRODUCT");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => console.log(err));
 };
