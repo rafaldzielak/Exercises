@@ -7,11 +7,14 @@ const multer = require("multer");
 const { graphqlHTTP } = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
+var cors = require("cors");
+var auth = require("./middleware/auth");
 
 // const feedRoutes = require("./routes/feed");
 // const authRoutes = require("./routes/auth");
 
 const app = express();
+app.use(cors());
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,19 +35,37 @@ const fileFilter = (req, file, cb) => {
 
 // app.use(bodyParser.urlencoded()); // x-www-form-urlencoded <form>
 app.use(bodyParser.json()); // application/json
-app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single("image"));
+// app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single("image"));
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  // res.setHeader("Access-Control-Allow-Origin", "*");
+  // res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, DELETE");
+  // res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
 
 // app.use("/feed", feedRoutes);
 // app.use("/auth", authRoutes);
-app.use("/graphql", graphqlHTTP({ schema: graphqlSchema, rootValue: graphqlResolver }));
+app.use(auth);
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver,
+    graphiql: true,
+    customFormatErrorFn(err) {
+      if (!err.originalError) return err;
+      const data = err.originalError.data;
+      const message = err.message || "An error occured";
+      const code = err.originalError.code || 500;
+      return { message, status: code, data };
+    },
+  })
+);
 
 app.use((error, req, res, next) => {
   console.log(error);
@@ -57,6 +78,7 @@ app.use((error, req, res, next) => {
 mongoose
   .connect("mongodb+srv://rafa:asdasd@cluster0.0mi3y.mongodb.net/second?retryWrites=true&w=majority")
   .then((result) => {
-    const server = app.listen(8080);
+    console.log("Connected to MongoDB");
+    const server = app.listen(8080, () => console.log("Server started"));
   })
   .catch((err) => console.log(err));
