@@ -62,15 +62,16 @@ class Feed extends Component {
             _id
             title
             content
+            imageUrl
             creator {
-              name 
+              name
             }
             createdAt
           }
           totalPosts
         }
       }
-      `,
+    `,
     };
     console.log(graphqlQuery);
 
